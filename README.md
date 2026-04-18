@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎯 AI Productivity Coach — Webapp v2.0
 
 A full-stack productivity app with JWT authentication, task management, habit tracking, and a rule-based AI coaching engine.
@@ -166,3 +167,6 @@ npm run dev            # starts on http://localhost:5173
 "jsonwebtoken":       "^9.0.2",
 "mysql2":             "^3.6.0"
 ```
+=======
+# AIProductivityCoach-webapp
+>>>>>>> fbe9831d317483a60e6d779f37124a5bcfd256ac
