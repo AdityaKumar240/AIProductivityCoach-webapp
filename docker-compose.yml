@@ -1,0 +1,88 @@
+version: "3.9"
+
+# ── AI Productivity Coach — Full Stack v2.0 ───────────────────────────────────
+# Three services: MySQL, Node.js API, React frontend (nginx)
+#
+# Quick start:
+#   cp backend/.env.example backend/.env   # edit DB_PASSWORD & JWT_SECRET
+#   docker compose up --build
+#
+# Frontend : http://localhost
+# API docs : http://localhost:3000/api
+
+services:
+
+  # ── MySQL 8 ──────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: ai_coach_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_DATABASE:      ${DB_NAME:-ai_coach_db}
+      MYSQL_USER:          ${DB_USER:-coach}
+      MYSQL_PASSWORD:      ${DB_PASSWORD:-changeme}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-changeme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - coach_net
+
+  # ── Node.js Backend ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai_coach_backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DB_HOST:     db
+      DB_PORT:     3306
+      DB_NAME:     ${DB_NAME:-ai_coach_db}
+      DB_USER:     ${DB_USER:-coach}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      PORT:        3000
+      # Override JWT_SECRET here or in backend/.env  ↓
+      JWT_SECRET:  ${JWT_SECRET:-CHANGE-THIS-BEFORE-DEPLOYING}
+      JWT_EXPIRES: 7d
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - coach_net
+
+  # ── React Frontend via Nginx ──────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    container_name: ai_coach_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - coach_net
+
+# ── Network & Volumes ─────────────────────────────────────────────────────────
+networks:
+  coach_net:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
