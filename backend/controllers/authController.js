@@ -31,9 +31,9 @@ const register = async (req, res) => {
       [result.insertId]
     );
     res.status(201).json({ success: true, message: 'Account created', token, data: user[0] });
-  } catch (err) {
-    console.error('register:', err);
-    res.status(500).json({ success: false, message: 'Registration failed' });
+  } catch (error) {
+    console.error('register:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -56,8 +56,8 @@ const login = async (req, res) => {
     const token = signToken(user.id);
     const { password_hash: _pw, ...safeUser } = user;
     res.json({ success: true, message: 'Logged in successfully', token, data: safeUser });
-  } catch (err) {
-    console.error('login:', err);
+  } catch (error) {
+    console.error('login:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
   }
 };
@@ -71,8 +71,8 @@ const getMe = async (req, res) => {
     if (!rows.length)
       return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: rows[0] });
-  } catch (err) {
-    console.error('getMe:', err);
+  } catch (error) {
+    console.error('getMe:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch profile' });
   }
 };
@@ -89,8 +89,8 @@ const updateMe = async (req, res) => {
       'SELECT id, name, email, created_at FROM users WHERE id = ?', [req.userId]
     );
     res.json({ success: true, message: 'Profile updated', data: rows[0] });
-  } catch (err) {
-    console.error('updateMe:', err);
+  } catch (error) {
+    console.error('updateMe:', error);
     res.status(500).json({ success: false, message: 'Failed to update profile' });
   }
 };
